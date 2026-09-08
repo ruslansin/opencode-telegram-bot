@@ -296,6 +296,9 @@ export const tr: I18nDictionary = {
   "opencode_stop.success": "✅ OpenCode Sunucusu başarıyla durduruldu",
   "opencode_stop.error":
     "🔴 Sunucu durdurulurken bir hata oluştu.\n\nAyrıntılar için uygulama günlüklerini kontrol edin.",
+  "opencode_idle.stopping":
+    "💤 OpenCode Sunucusu {minutes} dk boyunca boşta. Kaynakları serbest bırakmak için durduruluyor — bir sonraki isteğinizde otomatik olarak başlayacaktır.",
+  "opencode_on_demand.starting": "🔄 OpenCode Sunucusu başlatılıyor...",
 
   "agent.changed_message": "✅ Ajan değiştirildi: {name}",
   "agent.change_error_callback": "Ajan değiştirilemedi",

@@ -267,6 +267,9 @@ export const zh: I18nDictionary = {
   "opencode_stop.still_running": "停止请求后服务器仍在响应。",
   "opencode_stop.success": "✅ OpenCode 服务器已成功停止",
   "opencode_stop.error": "🔴 停止服务器时发生错误。\n\n请查看应用日志了解详情。",
+  "opencode_idle.stopping":
+    "💤 OpenCode 服务器已空闲 {minutes} 分钟。正在停止以释放资源——下次请求时会自动启动。",
+  "opencode_on_demand.starting": "🔄 正在启动 OpenCode 服务器...",
 
   "agent.changed_message": "✅ Agent 已切换为：{name}",
   "agent.change_error_callback": "切换 Agent 失败",

@@ -312,6 +312,9 @@ export const es: I18nDictionary = {
   "opencode_stop.success": "✅ OpenCode Server detenido correctamente",
   "opencode_stop.error":
     "🔴 Ocurrió un error al detener el servidor.\n\nRevisa los logs de la aplicación para más detalles.",
+  "opencode_idle.stopping":
+    "💤 El servidor de OpenCode lleva {minutes} min inactivo. Se detendrá para liberar recursos; se iniciará automáticamente en tu próxima solicitud.",
+  "opencode_on_demand.starting": "🔄 Iniciando OpenCode Server...",
 
   "agent.changed_message": "✅ Agente cambiado a: {name}",
   "agent.change_error_callback": "No se pudo cambiar el agente",

@@ -300,6 +300,9 @@ export const ru: I18nDictionary = {
   "opencode_stop.success": "✅ OpenCode Server успешно остановлен",
   "opencode_stop.error":
     "🔴 Произошла ошибка при остановке сервера.\n\nПроверьте логи приложения для подробностей.",
+  "opencode_idle.stopping":
+    "💤 OpenCode Server простаивает {minutes} мин. Останавливаю его для экономии ресурсов — он запустится автоматически при следующем запросе.",
+  "opencode_on_demand.starting": "🔄 Запускаю OpenCode Server...",
 
   "agent.changed_message": "✅ Агент изменен на: {name}",
   "agent.change_error_callback": "Ошибка при смене агента",

@@ -32,6 +32,7 @@ const mocked = vi.hoisted(() => ({
   setBotAndChatIdMock: vi.fn(),
   attachToSessionMock: vi.fn(),
   getTtsModeMock: vi.fn(),
+  ensureOpencodeServerRunningMock: vi.fn(),
 }));
 
 vi.mock("../../../src/opencode/client.js", () => ({
@@ -49,6 +50,10 @@ vi.mock("../../../src/app/services/session-service.js", () => ({
   getCurrentSession: vi.fn(() => mocked.currentSession),
   setCurrentSession: vi.fn(),
   clearSession: vi.fn(),
+}));
+
+vi.mock("../../../src/opencode/on-demand-start.js", () => ({
+  ensureOpencodeServerRunning: mocked.ensureOpencodeServerRunningMock,
 }));
 
 vi.mock("../../../src/app/services/session-cache-service.js", () => ({
@@ -217,6 +222,8 @@ describe("bot/handlers/prompt", () => {
     mocked.attachToSessionMock.mockReset();
     mocked.getTtsModeMock.mockReset();
     mocked.getTtsModeMock.mockReturnValue("off");
+    mocked.ensureOpencodeServerRunningMock.mockReset();
+    mocked.ensureOpencodeServerRunningMock.mockResolvedValue(true);
     mocked.attachToSessionMock.mockResolvedValue({
       busy: false,
       alreadyAttached: false,
@@ -253,6 +260,24 @@ describe("bot/handlers/prompt", () => {
       ensureEventSubscription: expect.any(Function),
     });
     expect(mocked.suppressionRegisterMock).toHaveBeenCalledWith("session-1", "Review README");
+  });
+
+  it("ensures the OpenCode server is running before dispatching a prompt", async () => {
+    const handled = await processUserPrompt(createContext(), "Review README", createDeps());
+
+    expect(handled).toBe(true);
+    expect(mocked.ensureOpencodeServerRunningMock).toHaveBeenCalledWith("prompt");
+  });
+
+  it("reports an error and skips the prompt when on-demand startup fails", async () => {
+    mocked.ensureOpencodeServerRunningMock.mockResolvedValue(false);
+    const ctx = createContext();
+
+    const handled = await processUserPrompt(ctx, "Review README", createDeps());
+
+    expect(handled).toBe(false);
+    expect(ctx.reply).toHaveBeenCalledWith(t("opencode_start.error"));
+    expect(mocked.sessionPromptAsyncMock).not.toHaveBeenCalled();
   });
 
   it("starts prompts through promptAsync instead of the streaming prompt endpoint", async () => {

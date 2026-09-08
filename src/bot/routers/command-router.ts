@@ -29,12 +29,41 @@ import {
   type LocalCommandResult,
 } from "../../app/services/local-command-registry.js";
 import { sendMessageWithMarkdownFallback } from "../messages/send-with-markdown-fallback.js";
+import { ensureOpencodeServerRunning } from "../../opencode/on-demand-start.js";
 import { t } from "../../i18n/index.js";
 
 interface CommandRouterDeps {
   ensureEventSubscription: (directory: string) => Promise<void>;
   clearRuntimeState: (reason: string) => void;
   localCommandRegistry?: LocalCommandRegistry;
+}
+
+const ON_DEMAND_SERVER_COMMANDS = new Set([
+  "new",
+  "abort",
+  "sessions",
+  "messages",
+  "projects",
+  "rename",
+  "task",
+  "tasklist",
+  "commands",
+  "skills",
+  "mcps",
+]);
+
+function getCommandName(text: string | undefined): string | null {
+  if (!text || !text.startsWith("/")) {
+    return null;
+  }
+
+  const token = text.trim().split(/\s+/)[0];
+  if (!token) {
+    return null;
+  }
+
+  const name = token.slice(1).split("@")[0]?.toLowerCase();
+  return name && name.length > 0 ? name : null;
 }
 
 let commandsInitialized = false;
@@ -78,6 +107,23 @@ export function registerCommandRouter(bot: Bot<Context>, deps: CommandRouterDeps
       flushPendingPrompt(ctx.chat.id);
     }
     await next();
+  });
+
+  bot.use(async (ctx, next) => {
+    const command = getCommandName(ctx.message?.text);
+    if (!command || !ON_DEMAND_SERVER_COMMANDS.has(command)) {
+      await next();
+      return;
+    }
+
+    if (await ensureOpencodeServerRunning(`command_${command}`)) {
+      await next();
+      return;
+    }
+
+    if (ctx.chat) {
+      await ctx.reply(t("opencode_start.error"));
+    }
   });
 
   bot.command("start", startCommand);

@@ -8,6 +8,7 @@ const mocked = vi.hoisted(() => ({
 }));
 
 vi.mock("node:child_process", () => ({
+  exec: vi.fn(),
   execFile: mocked.execFileMock,
 }));
 

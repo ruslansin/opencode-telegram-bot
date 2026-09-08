@@ -8,7 +8,11 @@ import {
   restoreAttachedCurrentSession,
 } from "../app/services/attach-service.js";
 import { opencodeReadyLifecycle } from "../opencode/ready-lifecycle.js";
+import { opencodeIdleShutdownService } from "../opencode/idle-shutdown.js";
+import { setOnDemandStartNotifier } from "../opencode/on-demand-start.js";
+import { t } from "../i18n/index.js";
 import { logger } from "../utils/logger.js";
+import { sendBotText } from "./messages/telegram-text.js";
 import { safeBackgroundTask } from "../utils/safe-background-task.js";
 import { withTelegramRateLimitRetry } from "../utils/telegram-rate-limit-retry.js";
 import { telegramOutageNoticeService } from "../app/services/telegram-outage-notice-service.js";
@@ -100,6 +104,23 @@ export function createBot(localCommandRegistry = LocalCommandRegistry.empty()): 
   configureAttachPresentation(createAttachPresentation());
 
   eventSubscriptionService.setTelegramContext(bot, config.telegram.allowedUserId);
+  opencodeIdleShutdownService.setClearRuntimeState((reason) =>
+    eventSubscriptionService.clearRuntimeState(reason),
+  );
+  opencodeIdleShutdownService.setNotifyStopped(async ({ minutes }) => {
+    await sendBotText({
+      api: bot.api,
+      chatId: config.telegram.allowedUserId,
+      text: t("opencode_idle.stopping", { minutes }),
+    });
+  });
+  setOnDemandStartNotifier(async () => {
+    await sendBotText({
+      api: bot.api,
+      chatId: config.telegram.allowedUserId,
+      text: t("opencode_on_demand.starting"),
+    });
+  });
 
   initializePromptQueueDispatch({
     bot,

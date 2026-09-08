@@ -42,6 +42,8 @@ export async function resetSingletonState(): Promise<void> {
     { promptAttachment },
     { __resetStreamThrottleForTests },
     { telegramOutageNoticeService },
+    { opencodeServerActivity },
+    { opencodeServerLifecycleLock },
     loggerModule,
   ] = await Promise.all([
     import("../../src/app/managers/question-manager.js"),
@@ -59,11 +61,15 @@ export async function resetSingletonState(): Promise<void> {
     import("../../src/app/managers/prompt-attachment-manager.js"),
     import("../../src/bot/streaming/stream-throttle.js"),
     import("../../src/app/services/telegram-outage-notice-service.js"),
+    import("../../src/opencode/server-activity.js"),
+    import("../../src/opencode/server-lifecycle-lock.js"),
     import("../../src/utils/logger.js"),
   ]);
 
   stopEventListening();
   __resetStreamThrottleForTests();
+  opencodeServerActivity.__resetForTests();
+  opencodeServerLifecycleLock.__resetForTests();
   questionManager.clear();
   permissionManager.clear();
   renameManager.clear();

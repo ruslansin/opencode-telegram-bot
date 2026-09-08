@@ -305,6 +305,9 @@ export const ko: I18nDictionary = {
   "opencode_stop.success": "✅ OpenCode 서버가 성공적으로 중지되었습니다",
   "opencode_stop.error":
     "🔴 서버 중지 중 오류가 발생했습니다.\n\n자세한 내용은 애플리케이션 로그를 확인해 주세요.",
+  "opencode_idle.stopping":
+    "💤 OpenCode 서버가 {minutes}분 동안 유휴 상태입니다. 리소스를 확보하기 위해 중지합니다 — 다음 요청 시 자동으로 시작됩니다.",
+  "opencode_on_demand.starting": "🔄 OpenCode 서버를 시작하는 중...",
 
   "agent.changed_message": "✅ 에이전트가 변경되었습니다: {name}",
   "agent.change_error_callback": "에이전트 변경 실패",

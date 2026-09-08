@@ -57,6 +57,7 @@ vi.mock("../../../src/utils/logger.js", () => ({
 }));
 
 import { opencodeStartCommand } from "../../../src/bot/commands/opencode-start-command.js";
+import { opencodeServerLifecycleLock } from "../../../src/opencode/server-lifecycle-lock.js";
 
 function createContext(): Context {
   return {
@@ -130,6 +131,30 @@ describe("bot/commands/opencode-start-command", () => {
     );
     expect(mocked.startLocalOpencodeServerMock).not.toHaveBeenCalled();
     expect(mocked.notifyReadyMock).toHaveBeenCalledWith("opencode_start_already_running");
+  });
+
+  it("waits for the server lifecycle lock before checking health", async () => {
+    const ctx = createContext();
+    mocked.healthMock.mockResolvedValue({ data: { healthy: true, version: "1.2.3" }, error: null });
+
+    let releaseLock: () => void = () => undefined;
+    const lockHeld = opencodeServerLifecycleLock.run(
+      () =>
+        new Promise<void>((resolve) => {
+          releaseLock = resolve;
+        }),
+    );
+
+    const commandPromise = opencodeStartCommand(ctx as never);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(mocked.healthMock).not.toHaveBeenCalled();
+
+    releaseLock();
+    await lockHeld;
+    await commandPromise;
+
+    expect(mocked.healthMock).toHaveBeenCalled();
   });
 
   it("starts the local server and reports success", async () => {
@@ -216,7 +241,7 @@ describe("bot/commands/opencode-start-command", () => {
       }),
     );
     expect(mocked.loggerWarnMock).toHaveBeenCalledWith(
-      "[Bot] OpenCode health check timed out after 3000ms",
+      "[OpenCodeHealth] Health check timed out after 3000ms",
     );
   });
 });

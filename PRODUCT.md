@@ -33,6 +33,7 @@ No public inbound ports are required for normal usage.
 - Start OpenCode server from the app (`opencode serve`)
 - Stop OpenCode server from the app
 - Optionally monitor and auto-restart a local OpenCode server
+- Optionally stop the local OpenCode server when idle and start it on demand when needed
 
 ### Project management
 
@@ -192,6 +193,7 @@ Agent picker behavior:
 - [x] Create new OpenCode projects directly from Telegram
 - [x] `/mcps` command: browse available MCP servers
 - [x] Optional local OpenCode server monitoring with automatic restart
+- [x] Optional idle shutdown of the local OpenCode server with on-demand startup
 - [x] Interactive project file browsing and file download from Telegram (`/ls`)
 - [x] Attaching a project file from `/ls` to the next prompt as a native OpenCode file part
 - [x] `/messages` command: browse session messages with revert and fork functionality

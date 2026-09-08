@@ -289,6 +289,9 @@ export const ar: I18nDictionary = {
   "opencode_stop.still_running": "لا يزال الخادم يستجيب بعد طلب الإيقاف.",
   "opencode_stop.success": "✅ تم إيقاف خادم OpenCode بنجاح",
   "opencode_stop.error": "🔴 حدث خطأ أثناء إيقاف الخادم.\n\nراجع سجلات التطبيق للتفاصيل.",
+  "opencode_idle.stopping":
+    "💤 خادم OpenCode خامل منذ {minutes} دقيقة. سأوقفه لتحرير الموارد — سيبدأ تلقائيًا عند طلبك التالي.",
+  "opencode_on_demand.starting": "🔄 جارٍ تشغيل خادم OpenCode...",
 
   "agent.changed_message": "✅ تم تغيير الوكيل إلى: {name}",
   "agent.change_error_callback": "تعذر تغيير الوكيل",

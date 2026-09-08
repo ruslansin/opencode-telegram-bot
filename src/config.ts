@@ -201,14 +201,24 @@ export function buildTelegramConfig(): {
   };
 }
 
+const autoRestartEnabled = getOptionalBooleanEnvVar("OPENCODE_AUTO_RESTART_ENABLED", false);
+const idleShutdownSec = getOptionalNonNegativeIntEnvVar("OPENCODE_IDLE_SHUTDOWN_SEC", 0);
+// Auto-restart owns the local server lifecycle, so on-demand startup is disabled
+// with it: otherwise both could try to start the server at the same time.
+const startOnDemand =
+  (getOptionalBooleanEnvVar("OPENCODE_START_ON_DEMAND", false) || idleShutdownSec > 0) &&
+  !autoRestartEnabled;
+
 export const config = {
   telegram: buildTelegramConfig(),
   opencode: {
     apiUrl: getEnvVar("OPENCODE_API_URL", false) || "http://localhost:4096",
     username: getEnvVar("OPENCODE_SERVER_USERNAME", false) || "opencode",
     password: getEnvVar("OPENCODE_SERVER_PASSWORD", false),
-    autoRestartEnabled: getOptionalBooleanEnvVar("OPENCODE_AUTO_RESTART_ENABLED", false),
+    autoRestartEnabled,
     monitorIntervalSec: getOptionalPositiveIntEnvVar("OPENCODE_MONITOR_INTERVAL_SEC", 300),
+    idleShutdownSec,
+    startOnDemand,
     model: {
       provider: getEnvVar("OPENCODE_MODEL_PROVIDER", true), // Required
       modelId: getEnvVar("OPENCODE_MODEL_ID", true), // Required

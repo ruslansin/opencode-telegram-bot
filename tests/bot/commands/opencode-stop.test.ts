@@ -74,6 +74,7 @@ vi.mock("../../../src/bot/handlers/prompt.js", () => ({
 }));
 
 import { opencodeStopCommand } from "../../../src/bot/commands/opencode-stop-command.js";
+import { opencodeServerLifecycleLock } from "../../../src/opencode/server-lifecycle-lock.js";
 import { promptQueue } from "../../../src/app/managers/prompt-queue-manager.js";
 import { createIncomingPrompt } from "../../../src/app/types/prompt.js";
 import { interactionManager } from "../../../src/app/managers/interaction-manager.js";
@@ -142,6 +143,30 @@ describe("bot/commands/opencode-stop-command", () => {
     expect(ctx.reply).toHaveBeenCalledWith(t("opencode_stop.remote_configured"));
     expect(mocked.findServerPidMock).not.toHaveBeenCalled();
     expect(mocked.clearRuntimeStateMock).not.toHaveBeenCalled();
+  });
+
+  it("waits for the server lifecycle lock before finding the process", async () => {
+    const ctx = createContext();
+    mocked.findServerPidMock.mockResolvedValue(null);
+
+    let releaseLock: () => void = () => undefined;
+    const lockHeld = opencodeServerLifecycleLock.run(
+      () =>
+        new Promise<void>((resolve) => {
+          releaseLock = resolve;
+        }),
+    );
+
+    const commandPromise = opencodeStopCommand(ctx as never, createDeps());
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(mocked.findServerPidMock).not.toHaveBeenCalled();
+
+    releaseLock();
+    await lockHeld;
+    await commandPromise;
+
+    expect(mocked.findServerPidMock).toHaveBeenCalled();
   });
 
   it("reports not_running when no local process is found", async () => {
