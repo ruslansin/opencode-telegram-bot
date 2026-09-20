@@ -233,6 +233,8 @@ Configuration can be provided through process environment variables or an `.env`
 | `OPENCODE_API_URL`                         | OpenCode server URL                                                                                                   |    No    | `http://localhost:4096`  |
 | `OPENCODE_AUTO_RESTART_ENABLED`            | Automatically restart a local OpenCode server when health-checks fail                                                 |    No    | `false`                  |
 | `OPENCODE_MONITOR_INTERVAL_SEC`            | Health monitor interval in seconds when OpenCode auto-restart is enabled                                              |    No    | `300`                    |
+| `OPENCODE_IDLE_SHUTDOWN_SEC`               | Stop the local OpenCode server after this many seconds of inactivity (`0` disables it; mutually exclusive with auto-restart) | No | `0`                      |
+| `OPENCODE_START_ON_DEMAND`                 | Start the local OpenCode server on demand when a prompt or command needs it (enabled implicitly when `OPENCODE_IDLE_SHUTDOWN_SEC > 0`; disabled when `OPENCODE_AUTO_RESTART_ENABLED=true`) | No | `false`                  |
 | `OPENCODE_SERVER_USERNAME`                 | Server auth username                                                                                                  |    No    | `opencode`               |
 | `OPENCODE_SERVER_PASSWORD`                 | Server auth password                                                                                                  |    No    | —                        |
 | `OPENCODE_MODEL_PROVIDER`                  | Default model provider                                                                                                |   Yes    | `opencode`               |
@@ -542,6 +544,7 @@ Port 4096 is **not** exposed by the bot image; it belongs to the OpenCode server
 - Ensure an OpenCode server is running at the configured `OPENCODE_API_URL` (default: `http://localhost:4096`)
 - For a local setup, you can start it with `opencode serve` or use `/opencode_start` in Telegram
 - For VPS/systemd setups with scheduled tasks, enable `OPENCODE_AUTO_RESTART_ENABLED=true` to let the bot restart a local OpenCode server when health-checks fail
+- To save memory on a low-spec machine, set `OPENCODE_IDLE_SHUTDOWN_SEC` to stop the local server when idle; it is started again on demand (mutually exclusive with auto-restart)
 - If `OPENCODE_API_URL` points to a remote server, verify that the address is reachable from the bot machine and that the remote server is healthy
 
 **No models in model picker**

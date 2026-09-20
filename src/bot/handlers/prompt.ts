@@ -17,6 +17,8 @@ import { keyboardManager } from "../keyboards/keyboard-manager.js";
 import { pinnedMessageManager } from "../pinned/pinned-message-manager.js";
 import { summaryAggregator } from "../../app/managers/summary-aggregation-manager.js";
 import { stopEventListening } from "../../opencode/events.js";
+import { ensureOpencodeServerRunning } from "../../opencode/on-demand-start.js";
+import { opencodeServerActivity } from "../../opencode/server-activity.js";
 import { interactionManager } from "../../app/managers/interaction-manager.js";
 import { clearAllInteractionState } from "../../app/managers/interaction-manager.js";
 import { safeBackgroundTask } from "../../utils/safe-background-task.js";
@@ -184,6 +186,11 @@ export async function processUserPrompt(
   const currentProject = getCurrentProject();
   if (!currentProject) {
     await ctx.reply(t("bot.project_not_selected"));
+    return false;
+  }
+
+  if (!(await ensureOpencodeServerRunning("prompt"))) {
+    await ctx.reply(t("opencode_start.error"));
     return false;
   }
 
@@ -362,6 +369,7 @@ export async function processUserPrompt(
     );
 
     foregroundSessionState.markBusy(currentSession.id, currentSession.directory);
+    opencodeServerActivity.markActivity();
     await markAttachedSessionBusy(currentSession.id);
     assistantRunState.startRun(currentSession.id, {
       startedAt: Date.now(),

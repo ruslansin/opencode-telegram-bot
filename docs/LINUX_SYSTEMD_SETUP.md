@@ -65,6 +65,14 @@ OPENCODE_MONITOR_INTERVAL_SEC=300
 
 This only works when `OPENCODE_API_URL` points to a local address, for example `http://localhost:4096`. The bot starts `opencode serve` with the configured port and checks the server every 300 seconds by default.
 
+Alternatively, to save memory on a small VPS, stop the local server when idle and start it again on demand:
+
+```env
+OPENCODE_IDLE_SHUTDOWN_SEC=600
+```
+
+`OPENCODE_START_ON_DEMAND` is enabled implicitly by a non-zero `OPENCODE_IDLE_SHUTDOWN_SEC`. Idle shutdown and auto-restart are mutually exclusive: when `OPENCODE_AUTO_RESTART_ENABLED=true`, idle shutdown is ignored with a warning and on-demand startup is disabled as well (auto-restart owns the server lifecycle).
+
 ## 6. View logs
 
 ```bash

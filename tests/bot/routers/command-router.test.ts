@@ -5,6 +5,7 @@ import { defined } from "../../helpers/defined.js";
 const mocked = vi.hoisted(() => ({
   flushPendingPrompt: vi.fn(),
   opencodeStopCommand: vi.fn(),
+  ensureOpencodeServerRunning: vi.fn(),
 }));
 
 vi.mock("../../../src/bot/handlers/message-merger.js", () => ({
@@ -16,12 +17,17 @@ vi.mock("../../../src/bot/commands/opencode-stop-command.js", () => ({
   opencodeStopCommand: mocked.opencodeStopCommand,
 }));
 
+vi.mock("../../../src/opencode/on-demand-start.js", () => ({
+  ensureOpencodeServerRunning: mocked.ensureOpencodeServerRunning,
+}));
+
 import {
   ensureCommandsInitialized,
   registerCommandRouter,
 } from "../../../src/bot/routers/command-router.js";
 import { BOT_COMMANDS } from "../../../src/bot/commands/definitions.js";
 import { config } from "../../../src/config.js";
+import { t } from "../../../src/i18n/index.js";
 
 describe("bot/routers/command-router", () => {
   it("registers bot slash command handlers", () => {
@@ -71,6 +77,65 @@ describe("bot/routers/command-router", () => {
 
     expect(mocked.flushPendingPrompt).toHaveBeenCalledWith(123);
     expect(next).toHaveBeenCalledOnce();
+  });
+
+  it("starts OpenCode on demand before a server-dependent command", async () => {
+    mocked.ensureOpencodeServerRunning.mockReset();
+    mocked.ensureOpencodeServerRunning.mockResolvedValue(true);
+    const bot = { command: vi.fn(), use: vi.fn() };
+    const next = vi.fn();
+    registerCommandRouter(bot as never, {
+      ensureEventSubscription: vi.fn(),
+      clearRuntimeState: vi.fn(),
+    });
+    const middleware = defined(bot.use.mock.calls[1]?.[0]);
+    const ctx = { chat: { id: 123 }, message: { text: "/sessions" } } as unknown as Context;
+
+    await middleware(ctx, next);
+
+    expect(mocked.ensureOpencodeServerRunning).toHaveBeenCalledWith("command_sessions");
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it("does not start OpenCode for server-independent commands", async () => {
+    mocked.ensureOpencodeServerRunning.mockReset();
+    const bot = { command: vi.fn(), use: vi.fn() };
+    const next = vi.fn();
+    registerCommandRouter(bot as never, {
+      ensureEventSubscription: vi.fn(),
+      clearRuntimeState: vi.fn(),
+    });
+    const middleware = defined(bot.use.mock.calls[1]?.[0]);
+    const ctx = { chat: { id: 123 }, message: { text: "/help" } } as unknown as Context;
+
+    await middleware(ctx, next);
+
+    expect(mocked.ensureOpencodeServerRunning).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it("replies with an error when on-demand start fails", async () => {
+    mocked.ensureOpencodeServerRunning.mockReset();
+    mocked.ensureOpencodeServerRunning.mockResolvedValue(false);
+    const bot = { command: vi.fn(), use: vi.fn() };
+    const next = vi.fn();
+    registerCommandRouter(bot as never, {
+      ensureEventSubscription: vi.fn(),
+      clearRuntimeState: vi.fn(),
+    });
+    const middleware = defined(bot.use.mock.calls[1]?.[0]);
+    const reply = vi.fn().mockResolvedValue(undefined);
+    const ctx = {
+      chat: { id: 123 },
+      message: { text: "/new" },
+      reply,
+    } as unknown as Context;
+
+    await middleware(ctx, next);
+
+    expect(mocked.ensureOpencodeServerRunning).toHaveBeenCalledWith("command_new");
+    expect(reply).toHaveBeenCalledWith(t("opencode_start.error"));
+    expect(next).not.toHaveBeenCalled();
   });
 
   it("passes clearRuntimeState to the opencode_stop handler", async () => {

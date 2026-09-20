@@ -296,6 +296,9 @@ export const en = {
   "opencode_stop.success": "✅ OpenCode Server stopped successfully",
   "opencode_stop.error":
     "🔴 An error occurred while stopping server.\n\nCheck application logs for details.",
+  "opencode_idle.stopping":
+    "💤 OpenCode Server has been idle for {minutes} min. Stopping it to free resources — it will start automatically on your next request.",
+  "opencode_on_demand.starting": "🔄 Starting OpenCode Server...",
 
   "agent.changed_message": "✅ Agent changed to: {name}",
   "agent.change_error_callback": "Failed to change agent",

@@ -296,6 +296,9 @@ export const id: I18nDictionary = {
   "opencode_stop.still_running": "Server masih merespons meski sudah diminta berhenti.",
   "opencode_stop.success": "✅ Server OpenCode berhasil dihentikan",
   "opencode_stop.error": "🔴 Gagal menghentikan server.\n\nPeriksa log aplikasi untuk detailnya.",
+  "opencode_idle.stopping":
+    "💤 Server OpenCode tidak aktif selama {minutes} menit. Menghentikannya untuk menghemat sumber daya — server akan mulai otomatis pada permintaan berikutnya.",
+  "opencode_on_demand.starting": "🔄 Menjalankan Server OpenCode...",
 
   "agent.changed_message": "✅ Agent diubah menjadi: {name}",
   "agent.change_error_callback": "Gagal mengubah agent",

@@ -8,6 +8,8 @@ const mocked = vi.hoisted(() => ({
   cleanupBotRuntimeMock: vi.fn(),
   autoRestartStartMock: vi.fn(),
   autoRestartStopMock: vi.fn(),
+  idleShutdownStartMock: vi.fn(),
+  idleShutdownStopMock: vi.fn(),
   notifyOpencodeReadyIfHealthyMock: vi.fn(),
   registerOpenCodeReadyRefreshHandlerMock: vi.fn(),
   loadSettingsMock: vi.fn(),
@@ -50,6 +52,13 @@ vi.mock("../../src/opencode/auto-restart.js", () => ({
   opencodeAutoRestartService: {
     start: mocked.autoRestartStartMock,
     stop: mocked.autoRestartStopMock,
+  },
+}));
+
+vi.mock("../../src/opencode/idle-shutdown.js", () => ({
+  opencodeIdleShutdownService: {
+    start: mocked.idleShutdownStartMock,
+    stop: mocked.idleShutdownStopMock,
   },
 }));
 
@@ -181,6 +190,8 @@ describe("app/start-bot-app", () => {
     mocked.cleanupBotRuntimeMock.mockReset();
     mocked.autoRestartStartMock.mockReset();
     mocked.autoRestartStopMock.mockReset();
+    mocked.idleShutdownStartMock.mockReset();
+    mocked.idleShutdownStopMock.mockReset();
     mocked.notifyOpencodeReadyIfHealthyMock.mockReset();
     mocked.registerOpenCodeReadyRefreshHandlerMock.mockReset();
     mocked.loadSettingsMock.mockReset();
@@ -202,6 +213,7 @@ describe("app/start-bot-app", () => {
 
     mocked.createBotMock.mockReturnValue(createBot());
     mocked.autoRestartStartMock.mockResolvedValue(false);
+    mocked.idleShutdownStartMock.mockReturnValue(true);
     mocked.notifyOpencodeReadyIfHealthyMock.mockResolvedValue(false);
     mocked.loadSettingsMock.mockResolvedValue(undefined);
     mocked.flushSettingsMock.mockResolvedValue(undefined);
@@ -230,7 +242,19 @@ describe("app/start-bot-app", () => {
     await flushBackgroundTasks();
 
     expect(mocked.registerOpenCodeReadyRefreshHandlerMock).toHaveBeenCalledTimes(1);
+    expect(mocked.idleShutdownStartMock).toHaveBeenCalledTimes(1);
     expect(mocked.notifyOpencodeReadyIfHealthyMock).toHaveBeenCalledWith("startup");
+  });
+
+  it("stops the idle shutdown service on shutdown", async () => {
+    const { releaseStart, appPromise } = await startAppWithPendingBot();
+
+    expectHandler("SIGINT")();
+
+    expect(mocked.idleShutdownStopMock).toHaveBeenCalledTimes(1);
+
+    releaseStart();
+    await appPromise;
   });
 
   it("runs startup health notification even when auto-restart handled startup", async () => {

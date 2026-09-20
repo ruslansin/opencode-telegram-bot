@@ -18,6 +18,8 @@ describe("config boolean env parsing", () => {
     vi.stubEnv("OPENCODE_MODEL_ID", "test-model");
     vi.stubEnv("OPENCODE_AUTO_RESTART_ENABLED", "");
     vi.stubEnv("OPENCODE_MONITOR_INTERVAL_SEC", "");
+    vi.stubEnv("OPENCODE_IDLE_SHUTDOWN_SEC", "");
+    vi.stubEnv("OPENCODE_START_ON_DEMAND", "");
   });
 
   it("tracks background sessions by default", async () => {
@@ -280,6 +282,54 @@ describe("config boolean env parsing", () => {
     const config = await loadConfig();
 
     expect(config.opencode.monitorIntervalSec).toBe(300);
+  });
+
+  it("disables idle shutdown and on-demand startup by default", async () => {
+    const config = await loadConfig();
+
+    expect(config.opencode.idleShutdownSec).toBe(0);
+    expect(config.opencode.startOnDemand).toBe(false);
+  });
+
+  it("parses OPENCODE_IDLE_SHUTDOWN_SEC as a non-negative integer", async () => {
+    vi.stubEnv("OPENCODE_IDLE_SHUTDOWN_SEC", "600");
+
+    const config = await loadConfig();
+
+    expect(config.opencode.idleShutdownSec).toBe(600);
+  });
+
+  it("enables on-demand startup implicitly when idle shutdown is set", async () => {
+    vi.stubEnv("OPENCODE_IDLE_SHUTDOWN_SEC", "600");
+
+    const config = await loadConfig();
+
+    expect(config.opencode.startOnDemand).toBe(true);
+  });
+
+  it("parses OPENCODE_START_ON_DEMAND as a boolean", async () => {
+    vi.stubEnv("OPENCODE_START_ON_DEMAND", "true");
+
+    const config = await loadConfig();
+
+    expect(config.opencode.startOnDemand).toBe(true);
+  });
+
+  it("disables on-demand startup when auto-restart is enabled", async () => {
+    vi.stubEnv("OPENCODE_START_ON_DEMAND", "true");
+    vi.stubEnv("OPENCODE_AUTO_RESTART_ENABLED", "true");
+
+    const config = await loadConfig();
+
+    expect(config.opencode.startOnDemand).toBe(false);
+  });
+
+  it("falls back to default idle shutdown on invalid value", async () => {
+    vi.stubEnv("OPENCODE_IDLE_SHUTDOWN_SEC", "never");
+
+    const config = await loadConfig();
+
+    expect(config.opencode.idleShutdownSec).toBe(0);
   });
 
   it("keeps TTS credentials unset when dedicated vars are missing", async () => {

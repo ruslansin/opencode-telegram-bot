@@ -3,6 +3,7 @@ import { cleanupBotRuntime, createBot, restoreFollowedSessionOnPollingStart } fr
 import { createScheduledTaskDeliverySender } from "../../bot/messages/scheduled-task-delivery.js";
 import { config } from "../../config.js";
 import { opencodeAutoRestartService } from "../../opencode/auto-restart.js";
+import { opencodeIdleShutdownService } from "../../opencode/idle-shutdown.js";
 import {
   notifyOpencodeReadyIfHealthy,
   registerOpenCodeReadyRefreshHandler,
@@ -219,6 +220,7 @@ export async function startBotApp(): Promise<void> {
     taskName: "app.opencodeStartup",
     task: async () => {
       await opencodeAutoRestartService.start();
+      opencodeIdleShutdownService.start();
       await notifyOpencodeReadyIfHealthy("startup");
     },
   });
@@ -235,6 +237,7 @@ export async function startBotApp(): Promise<void> {
     logger.info(`[App] Received ${signal}, shutting down...`);
     cleanupBotRuntime(`app_shutdown_${signal.toLowerCase()}`);
     opencodeAutoRestartService.stop();
+    opencodeIdleShutdownService.stop();
     scheduledTaskRuntime.shutdown();
 
     shutdownTimeout = setTimeout(() => {
@@ -319,6 +322,7 @@ export async function startBotApp(): Promise<void> {
     }
     cleanupBotRuntime("app_shutdown_complete");
     opencodeAutoRestartService.stop();
+    opencodeIdleShutdownService.stop();
     scheduledTaskRuntime.shutdown();
     await clearManagedServiceState().catch((error) => {
       logger.warn("[App] Failed to clear managed service state", error);
