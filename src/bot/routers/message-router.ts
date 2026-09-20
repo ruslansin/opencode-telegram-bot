@@ -33,6 +33,7 @@ import { handleVoiceMessage } from "../handlers/voice-handler.js";
 import { unknownCommandMiddleware } from "../middleware/unknown-command.js";
 import { getIncomingPrompt } from "../handlers/rich-message-handler.js";
 import { handleUnsupportedMessage } from "../handlers/unsupported-message-handler.js";
+import { ensureOpencodeServerRunning } from "../../opencode/on-demand-start.js";
 
 interface MessageRouterDeps {
   ensureEventSubscription: (directory: string) => Promise<void>;
@@ -50,6 +51,21 @@ async function blockMenuWhileInteractionActive(ctx: Context): Promise<boolean> {
   );
   await ctx.reply(t("interaction.blocked.finish_current"));
   return true;
+}
+
+/**
+ * Every reply-keyboard menu button reads live data from the local OpenCode
+ * server (agents, models, variants, context). Waking a sleeping server before
+ * the menu is built keeps on-demand startup working from the buttons, not just
+ * from a prompt or a command.
+ */
+async function ensureServerAwakeForMenu(ctx: Context, reason: string): Promise<boolean> {
+  if (await ensureOpencodeServerRunning(reason)) {
+    return true;
+  }
+
+  await ctx.reply(t("opencode_start.error"));
+  return false;
 }
 
 export function registerMessageRouter(bot: Bot<Context>, deps: MessageRouterDeps): void {
@@ -87,6 +103,10 @@ export function registerMessageRouter(bot: Bot<Context>, deps: MessageRouterDeps
         return;
       }
 
+      if (!(await ensureServerAwakeForMenu(ctx, "agent_menu"))) {
+        return;
+      }
+
       await showAgentSelectionMenu(ctx);
     } catch (err) {
       logger.error("[Bot] Error showing agent menu:", err);
@@ -99,6 +119,10 @@ export function registerMessageRouter(bot: Bot<Context>, deps: MessageRouterDeps
 
     try {
       if (await blockMenuWhileInteractionActive(ctx)) {
+        return;
+      }
+
+      if (!(await ensureServerAwakeForMenu(ctx, "model_menu"))) {
         return;
       }
 
@@ -117,6 +141,10 @@ export function registerMessageRouter(bot: Bot<Context>, deps: MessageRouterDeps
         return;
       }
 
+      if (!(await ensureServerAwakeForMenu(ctx, "context_menu"))) {
+        return;
+      }
+
       await handleContextButtonPress(ctx);
     } catch (err) {
       logger.error("[Bot] Error handling context button:", err);
@@ -129,6 +157,10 @@ export function registerMessageRouter(bot: Bot<Context>, deps: MessageRouterDeps
 
     try {
       if (await blockMenuWhileInteractionActive(ctx)) {
+        return;
+      }
+
+      if (!(await ensureServerAwakeForMenu(ctx, "variant_menu"))) {
         return;
       }
 
